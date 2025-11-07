@@ -1,124 +1,110 @@
-🏥 Sistema de Gerenciamento de Clínica (Agendamentos)
+# 🏥 Sistema de Gerenciamento de Clínica (Agendamentos)
 
-📘 Visão Geral
+Este projeto foi desenvolvido com o objetivo de criar um **sistema completo de gerenciamento para uma Clínica de Especialidades**, focado nos fluxos de **Agendamento de Consultas**, **Controle de Pacientes** e **Gestão de Médicos**.
 
-Este projeto tem como objetivo criar um sistema completo de gerenciamento para uma Clínica de Especialidades, com foco em agendamentos de consultas, controle de pacientes, e gestão de médicos e convênios.
+O foco principal é garantir a **integridade dos agendamentos** (evitando conflitos de horários), rastrear o ciclo de vida das consultas (status) e fornecer uma **visão consolidada** da agenda médica e do histórico do paciente.
 
-O sistema garante a integridade dos agendamentos, evita conflitos de horários e mantém um histórico auditável das consultas realizadas.
+---
 
-🎯 Objetivo da Aplicação
+## 🎯 Objetivo da Aplicação
 
-A aplicação integra os principais fluxos de negócio da clínica, conectando pacientes, médicos e convênios dentro de uma estrutura relacional confiável.
+A aplicação integra os principais fluxos de negócio de uma clínica, gerenciando as interações entre pacientes, médicos e seus respectivos convênios e especialidades.
 
-Módulo	Descrição
-🧍‍♀️ Gestão de Pacientes	Cadastro e gerenciamento de pacientes e seus convênios associados.
-👨‍⚕️ Gestão de Médicos	Cadastro de médicos, suas especialidades e convênios atendidos.
-📅 Agendamentos	Módulo central para marcar, confirmar, cancelar e realizar consultas.
-🕵️ Auditoria	Registro automático de todas as mudanças de status das consultas (TRIGGER).
-⚙️ Requisitos Funcionais (RF)
+| Módulo | Descrição |
+| :--- | :--- |
+| **Gestão de Pacientes** | Cadastro e gerenciamento de pacientes e seus convênios associados. |
+| **Gestão de Médicos** | Cadastro de médicos, suas especialidades e os convênios que atendem. |
+| **Agendamentos** | Módulo central para marcar, confirmar, cancelar e realizar consultas. |
+| **Auditoria** | Rastreamento automático de todas as mudanças de status das consultas via `TRIGGER`. |
 
-RF01: Cadastrar, editar e consultar Pacientes.
+---
 
-RF02: Cadastrar, editar e consultar Médicos.
+## ⚙️ Requisitos Funcionais (RF)
 
-RF03: Cadastrar e consultar Especialidades.
+* **RF01:** Cadastrar, editar e consultar Pacientes.
+* **RF02:** Cadastrar, editar e consultar Médicos.
+* **RF03:** Cadastrar e consultar Especialidades.
+* **RF04:** Cadastrar e consultar Convênios.
+* **RF05:** Associar Médicos às suas Especialidades.
+* **RF06:** Associar Médicos aos Convênios que eles atendem.
+* **RF07:** Agendar uma nova Consulta para um Paciente com um Médico.
+* **RF08:** Alterar o status de uma Consulta (confirmar, cancelar, etc.).
+* **RF09:** Listar a agenda de consultas por Médico e por dia (através da `VIEW`).
+* **RF10:** Impedir que um Médico tenha duas consultas no mesmo horário.
+* **RF11:** Impedir que um Paciente tenha duas consultas no mesmo horário.
 
-RF04: Cadastrar e consultar Convênios.
+---
 
-RF05: Associar Médicos às suas Especialidades.
+## 📋 Regras de Negócio (RN)
 
-RF06: Associar Médicos aos Convênios que atendem.
+* **RN01:** O CPF do Paciente deve ser único.
+* **RN02:** O CRM do Médico deve ser único.
+* **RN03:** Um Médico não pode ter duas consultas agendadas no mesmo horário (Garantido por `UNIQUE`).
+* **RN04:** Um Paciente não pode ter duas consultas agendadas no mesmo horário (Garantido por `UNIQUE`).
+* **RN05:** Uma Consulta só pode ser agendada se o Médico atender pela Especialidade selecionada (Garantido por `FOREIGN KEY` composta).
+* **RN06:** O status inicial de uma nova Consulta deve ser sempre 'AGENDADA' (Garantido por `DEFAULT`).
+* **RN07:** Os únicos status válidos para uma consulta são: 'AGENDADA', 'CONFIRMADA', 'CANCELADA', 'REALIZADA' (Garantido por `CHECK`).
+* **RN08:** Toda mudança de status de uma consulta deve ser auditada (Garantido por `TRIGGER`).
 
-RF07: Agendar uma nova Consulta para um Paciente com um Médico.
+---
 
-RF08: Alterar o status de uma Consulta (confirmar, cancelar, etc.).
+## 📊 Requisitos Não-Funcionais (RNF)
 
-RF09: Listar a agenda de consultas por Médico e por dia (VIEW).
+* **RNF01 (Segurança):** O acesso ao sistema deve ser controlado por autenticação.
+* **RNF02 (Desempenho):** A consulta da agenda do dia (VIEW) deve retornar resultados em menos de 3 segundos (Otimizado por `ÍNDICES`).
+* **RNF03 (Confiabilidade):** O sistema não deve perder dados de agendamento (Garantido por `CONSTRAINTS` e `FOREIGN KEYS`).
+* **RNF04 (Backup):** Deve existir uma rotina de backup diário do banco de dados.
+* **RNF05 (Auditabilidade):** O sistema deve registrar quem e quando um status de consulta foi alterado (Implementado com `TRIGGER` e `auditoria_consulta`).
 
-RF10: Impedir que um Médico tenha duas consultas no mesmo horário.
+---
 
-RF11: Impedir que um Paciente tenha duas consultas no mesmo horário.
-
-📋 Regras de Negócio (RN)
-Código	Regra
-RN01	O CPF do Paciente deve ser único.
-RN02	O CRM do Médico deve ser único.
-RN03	Um Médico não pode ter duas consultas no mesmo horário (UNIQUE).
-RN04	Um Paciente não pode ter duas consultas no mesmo horário (UNIQUE).
-RN05	Uma Consulta só pode ser agendada se o Médico atender pela Especialidade selecionada (FK composta).
-RN06	O status inicial de uma Consulta deve ser sempre AGENDADA (DEFAULT).
-RN07	Status válidos: AGENDADA, CONFIRMADA, CANCELADA, REALIZADA (CHECK).
-RN08	Toda mudança de status deve ser auditada (TRIGGER).
-📊 Requisitos Não-Funcionais (RNF)
-Código	Descrição
-RNF01	Autenticação para acesso seguro.
-RNF02	Consultas da VIEW otimizadas para retornar em < 3 segundos (ÍNDICES).
-RNF03	Integridade total via FOREIGN KEYS.
-RNF04	Rotina de backup diário.
-RNF05	Auditoria de todas as alterações de status (TRIGGER + auditoria_consulta).
-🧩 Modelo de Dados (Diagrama ER)
-
-📎 Diagrama Lógico Completo – 8 Tabelas Relacionadas
-
-<p align="center"> <img src="https://raw.githubusercontent.com/SEU_USUARIO/clinica-especialidades/main/assets/diagrama_clinica.png" alt="Diagrama ER da Clínica" width="85%"> </p>
-
-Tabelas principais:
-
-🏥 convenio
-
-💉 especialidade
-
-👨‍⚕️ medico
-
-🧍‍♂️ paciente
-
-🔗 medico_especialidade (N:N)
-
-🔗 medico_convenio (N:N)
-
-📅 consulta (Transacional)
-
-🕵️ auditoria_consulta (Log via Trigger)
-
-🛠️ Tecnologias Utilizadas
-Tecnologia	Descrição
-🐘 PostgreSQL	Banco de dados relacional principal.
-💬 SQL (DDL, DML)	Criação e manipulação de tabelas e dados.
-⚙️ PL/pgSQL	Funções e triggers para auditoria.
-🧠 Views & Constraints	Integridade e performance garantidas.
-🚀 Como Executar o Projeto
-
-Execute os scripts na ordem abaixo no pgAdmin 4 ou psql:
-
--- 1️⃣ Criação do esquema e estrutura base
-\i 01_schema_v2.sql
-
--- 2️⃣ Inserção de dados e testes de auditoria
-\i 02_dados_v2.sql
-
--- 3️⃣ Criação da view de agenda médica
-\i 03_view.sql
+## DatabaseDiagram
+Este é o diagrama lógico final do nosso banco de dados, mostrando as 8 tabelas e seus relacionamentos diretos.
 
 
-Após a execução, você pode consultar a agenda completa:
+**As 8 tabelas do sistema são:**
+1.  `convenio`
+2.  `especialidade`
+3.  `medico`
+4.  `paciente`
+5.  `medico_especialidade` (Tabela Associativa N:N)
+6.  `medico_convenio` (Tabela Associativa N:N)
+7.  `consulta` (Tabela principal de transações)
+8.  `auditoria_consulta` (Tabela de log/trigger)
 
-SELECT * FROM vw_agenda_completa
-WHERE nome_medico = 'Dr. House';
+---
 
-🧠 Recursos Avançados Implementados
+## 🛠️ Tecnologias Utilizadas
 
-✅ Trigger automática para registrar mudanças de status
-✅ Function PL/pgSQL para auditoria inteligente
-✅ Views para relatórios consolidados
-✅ Constraints compostas e CHECKs
-✅ Índices para otimização de consultas
+* **Banco de Dados:** `PostgreSQL`
+* **Linguagem:** `SQL` (DDL, DML)
+* **Recursos Avançados:**
+    * `Triggers` e `Functions` (plpgsql) para auditoria automática.
+    * `Views` para simplificação de relatórios complexos.
+    * `Constraints` (CHECK, UNIQUE, FKs Compostas) para garantir a integridade das Regras de Negócio.
 
-👨‍💻 Autores
-Nome	Função
-Naldo Junior	Desenvolvimento e estrutura do banco
-Samuel Gomes Soares	Modelagem e documentação
-Gabriel Barbosa	Criação de dados e testes
-João Victor	Auditoria e validação lógica
-🧾 Licença
+---
 
-Este projeto foi desenvolvido para fins acadêmicos, com objetivo educacional de estudo de modelagem e implementação de banco de dados relacional no PostgreSQL.
+## 🚀 Como Executar o Projeto
+
+Para recriar o banco de dados do zero, execute os scripts SQL na ordem exata abaixo:
+
+1.  **`01_schema_v2.sql`**
+    * Cria todas as 8 tabelas, `CONSTRAINTS`, `ÍNDICES`, a `FUNCTION` e o `TRIGGER` de auditoria.
+
+2.  **`02_dados_v2.sql`**
+    * Popula o banco com 10 pacientes, 4 médicos, 11 consultas e todos os dados de apoio.
+    * Executa `UPDATEs` no final para testar o `TRIGGER` de auditoria.
+
+3.  **`03_view.sql`**
+    * Cria a `VIEW vw_agenda_completa`.
+    * Executa um `SELECT` de exemplo na view para listar a agenda do Dr. House.
+
+---
+
+## 👨‍💻 Autores
+
+* [Naldo Junior]
+* [Samuel Gomes Soares]
+* [Gabriel Barbosa]
+* [João Victor]
