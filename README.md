@@ -1,10 +1,5 @@
 # 🏥 Sistema de Gerenciamento de Clínica (Agendamentos)
 
-![Status do Projeto](https://img.shields.io/badge/Status-Concluído-success?style=flat-square)
-![Banco de Dados](https://img.shields.io/badge/PostgreSQL-v15-blue?style=flat-square&logo=postgresql)
-![Linguagem](https://img.shields.io/badge/SQL-DDL%20%7C%20DML-blueviolet?style=flat-square)
-![Licença](https://img.shields.io/badge/Licença-Acadêmica-lightgrey?style=flat-square)
-
 ---
 
 ## 📘 Visão Geral
@@ -150,3 +145,4 @@ WHERE nome_medico = 'Dr. House';
 ## 🧾 Licença
 
 Este projeto foi desenvolvido para fins **acadêmicos**, com objetivo educacional de estudo de **modelagem e implementação de banco de dados relacional** no **PostgreSQL**.
+
