@@ -70,9 +70,7 @@ A aplicação integra os principais fluxos de negócio da clínica, conectando p
 
 > 📎 **Diagrama Lógico Completo – 8 Tabelas Relacionadas**
 
-<p align="center">
-  <img src="assets/diagrama_clinica.png" alt="Diagrama ER da Clínica" width="85%">
-</p>
+<img width="1681" height="1361" alt="clinica_especialidades (1) drawio" src="https://github.com/user-attachments/assets/b369bfd6-7279-4da3-8eb7-b05bf9354334" />
 
 **Tabelas principais:**
 1. 🏥 `convenio`  
@@ -101,21 +99,22 @@ A aplicação integra os principais fluxos de negócio da clínica, conectando p
 
 Execute os scripts na ordem abaixo no **pgAdmin 4** ou **psql**:
 
-```sql
+sql
 -- 1️⃣ Criação do esquema e estrutura base
-\i 01_schema_v2.sql
+\i 01_schema.sql
 
 -- 2️⃣ Inserção de dados e testes de auditoria
-\i 02_dados_v2.sql
+\i 02_dados.sql
 
 -- 3️⃣ Criação da view de agenda médica
 \i 03_view.sql
+
 
 ## 🧪 Teste de Execução
 
 Após a execução, você pode consultar a agenda completa:
 
-```sql
+sql
 SELECT * FROM vw_agenda_completa
 WHERE nome_medico = 'Dr. House';
 
@@ -145,4 +144,3 @@ WHERE nome_medico = 'Dr. House';
 ## 🧾 Licença
 
 Este projeto foi desenvolvido para fins **acadêmicos**, com objetivo educacional de estudo de **modelagem e implementação de banco de dados relacional** no **PostgreSQL**.
-
