@@ -71,9 +71,9 @@ O Backend atua como interface RESTful, delegando as validações para o banco de
 2.  Execute os scripts SQL na seguinte ordem obrigatória (para evitar erros de chave estrangeira):
     * `00_criar_banco.sql`
     * `01_estrutura.sql`
-    * `02_dados.sql`
-    * `03_view.sql`
-    * `fase2_logica.sql` (Contém as Procedures, Triggers e Functions).
+    * `02_logica.sql` (Contém as Procedures, Triggers e Functions).
+    * `03_dados.sql`
+    * `04_view.sql`
 
 ### Passo 2: Configuração do Backend
 1.  Na raiz do projeto, abra o arquivo `db.js` e configure a senha do seu MySQL:
@@ -97,4 +97,5 @@ Projeto desenvolvido para a disciplina CONECTAR BANCO DE DADOS COM P-O-O pelos a
 * **Samuel Gomes**
 * **João Victor**
 * **Gabriel Barbosa**
+
 
