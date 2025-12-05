@@ -91,4 +91,9 @@ O Backend atua como interface RESTful, delegando as validações para o banco de
 4.  O servidor estará rodando em `http://localhost:3000`.
 
 ## 7. Autores
-Projeto desenvolvido para a disciplina de Banco de Dados e Desenvolvimento Web.
+Projeto desenvolvido para a disciplina de Banco de Dados e Desenvolvimento Web pelos alunos:
+
+* **Naldo Junior**
+* **Samuel Gomes**
+* **João Victor**
+* **Gabriel Barbosa**
