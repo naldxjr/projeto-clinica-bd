@@ -1,146 +1,94 @@
-# 🏥 Sistema de Gerenciamento de Clínica (Agendamentos)
+# Sistema de Gestão para Clínica de Especialidades Médicas
 
----
+## 1. Visão Geral do Projeto
+Este projeto consiste no desenvolvimento de um sistema completo para o gerenciamento de agendamentos em uma clínica médica. O foco principal desta etapa (Fase 2) foi a implementação da lógica de negócio diretamente no Banco de Dados (SGBD MySQL) para garantir integridade, segurança e auditoria, além do desenvolvimento de uma API Backend em Node.js para interface com o sistema.
 
-## 📘 Visão Geral
+O sistema foi projetado para resolver problemas de conflitos de agenda (duplicidade de horários), validação de cobertura de convênios e rastreabilidade de alterações (logs).
 
-Este projeto tem como objetivo criar um **sistema completo de gerenciamento para uma Clínica de Especialidades**, com foco em **agendamentos de consultas**, **controle de pacientes** e **gestão de médicos e convênios**.  
+## 2. Tecnologias Utilizadas
+* **Banco de Dados:** MySQL 8.0
+* **Backend:** Node.js
+* **Framework Web:** Express.js
+* **Driver de Banco:** mysql2
+* **Ferramenta de Testes:** Thunder Client / Postman
 
-O sistema garante a **integridade dos agendamentos**, evita conflitos de horários e mantém um **histórico auditável** das consultas realizadas.
+## 3. Modelagem de Dados e Estrutura do Banco
+O banco de dados `clinica_especialidades` foi modelado seguindo a 3ª Forma Normal (3FN). A estrutura resolve relacionamentos do tipo N:N através de entidades associativas e contempla requisitos de segurança e auditoria que não estavam presentes na versão anterior.
 
----
+O esquema é composto por **9 tabelas**:
 
-## 🎯 Objetivo da Aplicação
+### 3.1. Tabelas de Acesso e Domínio
+* **`usuario`**: Armazena credenciais de acesso (login/senha) e define o perfil (ADMIN, MEDICO, PACIENTE).
+* **`convenio`**: Catálogo de planos de saúde aceitos.
+* **`especialidade`**: Catálogo de especialidades médicas.
 
-A aplicação integra os principais fluxos de negócio da clínica, conectando pacientes, médicos e convênios dentro de uma estrutura relacional confiável.
+### 3.2. Tabelas de Entidades Principais
+* **`medico`**: Dados profissionais, vinculado à tabela de usuários.
+* **`paciente`**: Dados pessoais e convênio titular, vinculado à tabela de usuários.
+* **`consulta`**: Entidade central que registra o agendamento (Data, Hora, Valor, Status).
 
-| Módulo | Descrição |
-| :--- | :--- |
-| 🧍‍♀️ **Gestão de Pacientes** | Cadastro e gerenciamento de pacientes e seus convênios associados. |
-| 👨‍⚕️ **Gestão de Médicos** | Cadastro de médicos, suas especialidades e convênios atendidos. |
-| 📅 **Agendamentos** | Módulo central para marcar, confirmar, cancelar e realizar consultas. |
-| 🕵️ **Auditoria** | Registro automático de todas as mudanças de status das consultas (`TRIGGER`). |
+### 3.3. Tabelas Associativas (Resolução de N:N)
+* **`medico_especialidade`**: Relaciona quais especialidades cada médico possui.
+* **`medico_convenio`**: Relaciona quais convênios cada médico atende, permitindo a validação de regras de negócio.
 
----
+### 3.4. Tabela de Log
+* **`auditoria_consulta`**: Armazena o histórico de alterações de status das consultas (valor anterior, novo valor, data e responsável), garantindo a rastreabilidade exigida.
 
-## ⚙️ Requisitos Funcionais (RF)
+## 4. Lógica de Negócio Implementada (SQL)
+A inteligência do sistema reside no banco de dados através de objetos programáveis:
 
-* **RF01:** Cadastrar, editar e consultar Pacientes.  
-* **RF02:** Cadastrar, editar e consultar Médicos.  
-* **RF03:** Cadastrar e consultar Especialidades.  
-* **RF04:** Cadastrar e consultar Convênios.  
-* **RF05:** Associar Médicos às suas Especialidades.  
-* **RF06:** Associar Médicos aos Convênios que atendem.  
-* **RF07:** Agendar uma nova Consulta para um Paciente com um Médico.  
-* **RF08:** Alterar o status de uma Consulta (confirmar, cancelar, etc.).  
-* **RF09:** Listar a agenda de consultas por Médico e por dia (`VIEW`).  
-* **RF10:** Impedir que um Médico tenha duas consultas no mesmo horário.  
-* **RF11:** Impedir que um Paciente tenha duas consultas no mesmo horário.  
+### 4.1. Stored Procedures
+* **`prc_agendar_consulta`**: Orquestra o processo de agendamento. Realiza a verificação de disponibilidade e, somente se o horário estiver livre, executa a inserção.
 
----
+### 4.2. Triggers (Gatilhos)
+* **`trg_validar_convenio_medico` (BEFORE INSERT)**: Impede o agendamento caso o médico não atenda o convênio do paciente. Dispara um erro de banco de dados e aborta a transação.
+* **`trg_log_auditoria` (AFTER UPDATE)**: Monitora a tabela de consultas. Ao detectar mudança de status, insere automaticamente um registro na tabela `auditoria_consulta`.
 
-## 📋 Regras de Negócio (RN)
+### 4.3. Stored Functions
+* **`fn_verificar_disponibilidade`**: Retorna booleano indicando se o médico possui agenda livre no horário solicitado.
+* **`fn_faturamento_medico`**: Calcula e retorna o valor total monetário das consultas realizadas por um médico.
 
-| Código | Regra |
-| :--- | :--- |
-| **RN01** | O CPF do Paciente deve ser único. |
-| **RN02** | O CRM do Médico deve ser único. |
-| **RN03** | Um Médico não pode ter duas consultas no mesmo horário (`UNIQUE`). |
-| **RN04** | Um Paciente não pode ter duas consultas no mesmo horário (`UNIQUE`). |
-| **RN05** | Uma Consulta só pode ser agendada se o Médico atender pela Especialidade selecionada (`FK composta`). |
-| **RN06** | O status inicial de uma Consulta deve ser sempre `AGENDADA` (`DEFAULT`). |
-| **RN07** | Status válidos: `AGENDADA`, `CONFIRMADA`, `CANCELADA`, `REALIZADA` (`CHECK`). |
-| **RN08** | Toda mudança de status deve ser auditada (`TRIGGER`). |
+## 5. Documentação da API (Backend)
+O Backend atua como interface RESTful, delegando as validações para o banco de dados.
 
----
+| Método | Rota | Descrição |
+| :--- | :--- | :--- |
+| **GET** | `/pacientes` | Lista todos os pacientes cadastrados. |
+| **GET** | `/medicos` | Lista todos os médicos cadastrados. |
+| **POST** | `/agendar` | Executa a procedure `prc_agendar_consulta`. Retorna erro 400 se houver conflito de horário ou convênio. |
+| **GET** | `/medicos/:id/faturamento` | Executa a função de cálculo financeiro. |
+| **PATCH** | `/consultas/:id/cancelar` | Atualiza o status para 'CANCELADA', acionando a trigger de auditoria. |
+| **CRUD** | `/pacientes`, `/medicos` | Endpoints completos (GET, POST, PUT, DELETE) para gestão cadastral. |
 
-## 📊 Requisitos Não-Funcionais (RNF)
+## 6. Instruções de Instalação e Execução
 
-| Código | Descrição |
-| :--- | :--- |
-| **RNF01** | Autenticação para acesso seguro. |
-| **RNF02** | Consultas da `VIEW` otimizadas para retornar em < 3 segundos (`ÍNDICES`). |
-| **RNF03** | Integridade total via `FOREIGN KEYS`. |
-| **RNF04** | Rotina de backup diário. |
-| **RNF05** | Auditoria de todas as alterações de status (`TRIGGER` + `auditoria_consulta`). |
+### Pré-requisitos
+* MySQL Server instalado e rodando.
+* Node.js e NPM instalados.
 
----
+### Passo 1: Configuração do Banco de Dados
+1.  Acesse a pasta `banco_de_dados`.
+2.  Execute os scripts SQL na seguinte ordem obrigatória (para evitar erros de chave estrangeira):
+    * `00_criar_banco.sql`
+    * `01_estrutura.sql`
+    * `02_dados.sql`
+    * `03_view.sql`
+    * `fase2_logica.sql` (Contém as Procedures, Triggers e Functions).
 
-## 🧩 Modelo de Dados (Diagrama ER)
+### Passo 2: Configuração do Backend
+1.  Na raiz do projeto, abra o arquivo `db.js` e configure a senha do seu MySQL:
+    ```javascript
+    password: 'sua_senha_aqui'
+    ```
+2.  Instale as dependências do projeto:
+    ```bash
+    npm install
+    ```
+3.  Inicie o servidor:
+    ```bash
+    node index.js
+    ```
+4.  O servidor estará rodando em `http://localhost:3000`.
 
-> 📎 **Diagrama Lógico Completo – 8 Tabelas Relacionadas**
-
-<img width="1681" height="1361" alt="clinica_especialidades (1) drawio" src="https://github.com/user-attachments/assets/b369bfd6-7279-4da3-8eb7-b05bf9354334" />
-
-**Tabelas principais:**
-1. 🏥 `convenio`  
-2. 💉 `especialidade`  
-3. 👨‍⚕️ `medico`  
-4. 🧍‍♂️ `paciente`  
-5. 🔗 `medico_especialidade` *(N:N)*  
-6. 🔗 `medico_convenio` *(N:N)*  
-7. 📅 `consulta` *(Transacional)*  
-8. 🕵️ `auditoria_consulta` *(Log via Trigger)*  
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-| Tecnologia | Descrição |
-| :--- | :--- |
-| 🐘 **PostgreSQL** | Banco de dados relacional principal. |
-| 💬 **SQL (DDL, DML)** | Criação e manipulação de tabelas e dados. |
-| ⚙️ **PL/pgSQL** | Funções e triggers para auditoria. |
-| 🧠 **Views & Constraints** | Integridade e performance garantidas. |
-
----
-
-## 🚀 Como Executar o Projeto
-
-Execute os scripts na ordem abaixo no **pgAdmin 4** ou **psql**:
-
-sql
--- 1️⃣ Criação do esquema e estrutura base
-\i 01_schema.sql
-
--- 2️⃣ Inserção de dados e testes de auditoria
-\i 02_dados.sql
-
--- 3️⃣ Criação da view de agenda médica
-\i 03_view.sql
-
-
-## 🧪 Teste de Execução
-
-Após a execução, você pode consultar a agenda completa:
-
-sql
-SELECT * FROM vw_agenda_completa
-WHERE nome_medico = 'Dr. House';
-
----
-
-## 🧠 Recursos Avançados Implementados
-
-- ✅ **Trigger** automática para registrar mudanças de status  
-- ✅ **Function PL/pgSQL** para auditoria inteligente  
-- ✅ **Views** para relatórios consolidados  
-- ✅ **Constraints compostas e CHECKs**  
-- ✅ **Índices** para otimização de consultas  
-
----
-
-## 👨‍💻 Autores
-
-| Nome | Função |
-| :--- | :--- |
-| **Naldo Junior** | Desenvolvimento e estrutura do banco |
-| **Samuel Gomes Soares** | Modelagem e documentação |
-| **Gabriel Barbosa** | Criação de dados e testes |
-| **João Victor** | Auditoria e validação lógica |
-
----
-
-## 🧾 Licença
-
-Este projeto foi desenvolvido para fins **acadêmicos**, com objetivo educacional de estudo de **modelagem e implementação de banco de dados relacional** no **PostgreSQL**.
+## 7. Autores
+Projeto desenvolvido para a disciplina de Banco de Dados e Desenvolvimento Web.
